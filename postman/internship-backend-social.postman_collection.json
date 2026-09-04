@@ -1,0 +1,2012 @@
+{
+  "info": {
+    "_postman_id": "eba9c880-3646-4ae3-ad79-3a463b4e3d29",
+    "name": "Internship Backend — social network",
+    "description": "Users, posts, comments, likes and groups, over REST and GraphQL.\n\nSend **Auth > Login** first: its test script stores `token` and `refreshToken` as collection variables and every other request picks them up automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string",
+      "description": "Where the backend is listening. Point it somewhere else to run the same requests against another instance."
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "Access token. Filled in by Auth > Login."
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string",
+      "description": "Refresh token. Filled in by Auth > Login."
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 and a token pair', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('token');",
+                  "  pm.collectionVariables.set('token', body.token);",
+                  "  pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"helena.hills@social.com\",\n  \"password\": \"password789\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            },
+            "description": "Exchanges credentials for an access/refresh pair. The test script stores both in collection variables, so every other request below is authenticated - run this first.\n\nCallable without a token. Expected: 200."
+          }
+        },
+        {
+          "name": "Refresh tokens",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 and a token pair', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('token');",
+                  "  pm.collectionVariables.set('token', body.token);",
+                  "  pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "refresh"
+              ]
+            },
+            "description": "Trades the refresh token for a new pair, consuming the old one. Rotation is enforced: replaying a spent token revokes the whole session family.\n\nCallable without a token. Expected: 200."
+          }
+        },
+        {
+          "name": "Sign up",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"trainee@example.com\",\n  \"password\": \"password789\",\n  \"username\": \"trainee\",\n  \"firstName\": \"New\",\n  \"secondName\": \"Trainee\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "signup"
+              ]
+            },
+            "description": "Creates an account that can log in immediately. Emails are unique case-insensitively - edit the address before re-sending, or the second call is a 409.\n\nCallable without a token. Expected: 201."
+          }
+        },
+        {
+          "name": "Change email or password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"password789\",\n  \"email\": \"helena.hills@social.com\",\n  \"password\": \"password789\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "account"
+              ]
+            },
+            "description": "currentPassword is always required. Changing the password revokes every other session and returns a fresh token pair; changing only the email returns none.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "logout"
+              ]
+            },
+            "description": "Revokes the refresh token in the database and blacklists the access token in memory. Unguarded on purpose: it must work with an expired token.\n\nCallable without a token. Expected: 200."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Posts",
+      "item": [
+        {
+          "name": "List posts (paged)",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts?limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "1-100, default 20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "rows to skip, default 0"
+                }
+              ]
+            },
+            "description": "A page: { items, total, limit, offset }. Each row carries likesCount, commentsCount and its own author’s authorPhoto - but not the likers.\n\nCallable without a token. Expected: 200."
+          }
+        },
+        {
+          "name": "Create post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Hello from Postman\",\n  \"content\": \"Created against the internship backend.\",\n  \"image\": \"/assets/post-image-1.png\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
+            },
+            "description": "The author is taken from the token, not the body.\n\nRequires `Authorization: Bearer <token>`. Expected: 201."
+          }
+        },
+        {
+          "name": "Update post",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Edited title\",\n  \"content\": \"Edited content\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/:postId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                ":postId"
+              ],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "101",
+                  "description": "a post owned by the seeded login"
+                }
+              ]
+            },
+            "description": "Only the author may edit; anyone else gets a 404, not a 403.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Delete post",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/:postId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                ":postId"
+              ],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "101",
+                  "description": "a post owned by the seeded login"
+                }
+              ]
+            },
+            "description": "Author only. Its comments and likes go with it - the foreign keys cascade.\n\nRequires `Authorization: Bearer <token>`. Expected: 204."
+          }
+        },
+        {
+          "name": "Who liked a post",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/:postId/likes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                ":postId",
+                "likes"
+              ],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "101",
+                  "description": "any post id"
+                }
+              ]
+            },
+            "description": "The likers, fetched on demand. They are no longer embedded in the post list, which used to grow with likes x posts.\n\nCallable without a token. Expected: 200."
+          }
+        },
+        {
+          "name": "Like post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postId\": 101\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "like"
+              ]
+            },
+            "description": "Idempotent per (user, post): a second call answers already_liked and the count does not move.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Remove like",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postId\": 101\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/dislike",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "dislike"
+              ]
+            },
+            "description": "Removes this user’s like. Answers not_liked if there was none.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "List all comments",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "comments"
+              ]
+            },
+            "description": "Every comment in the database, unpaged.\n\nCallable without a token. Expected: 200."
+          }
+        },
+        {
+          "name": "Comments on a post",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/:postId/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                ":postId",
+                "comments"
+              ],
+              "variable": [
+                {
+                  "key": "postId",
+                  "value": "101",
+                  "description": "any post id"
+                }
+              ]
+            },
+            "description": "The one read in this domain that needs a token - the other reads are public.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Create comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postId\": 101,\n  \"text\": \"Commented from Postman.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "comments"
+              ]
+            },
+            "description": "The author comes from the token.\n\nRequires `Authorization: Bearer <token>`. Expected: 201."
+          }
+        },
+        {
+          "name": "Update comment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Edited comment.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/comments/:commentId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "comments",
+                ":commentId"
+              ],
+              "variable": [
+                {
+                  "key": "commentId",
+                  "value": "3",
+                  "description": "a comment written by the seeded login"
+                }
+              ]
+            },
+            "description": "Author only.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Delete comment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/comments/:commentId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "comments",
+                ":commentId"
+              ],
+              "variable": [
+                {
+                  "key": "commentId",
+                  "value": "3",
+                  "description": "a comment written by the seeded login"
+                }
+              ]
+            },
+            "description": "Author only.\n\nRequires `Authorization: Bearer <token>`. Expected: 204."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Groups",
+      "item": [
+        {
+          "name": "List groups",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups"
+              ]
+            },
+            "description": "All ten seeded groups, unpaged.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Get group",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/:groupId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups",
+                ":groupId"
+              ],
+              "variable": [
+                {
+                  "key": "groupId",
+                  "value": "1",
+                  "description": "any group id"
+                }
+              ]
+            },
+            "description": "404 if the id does not exist.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Create group",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman Explorers\",\n  \"photo\": \"/assets/group-1.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/groups",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups"
+              ]
+            },
+            "description": "membersCount starts at 1.\n\nRequires `Authorization: Bearer <token>`. Expected: 201."
+          }
+        },
+        {
+          "name": "Update group",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Renamed group\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/:groupId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups",
+                ":groupId"
+              ],
+              "variable": [
+                {
+                  "key": "groupId",
+                  "value": "1",
+                  "description": "any group id"
+                }
+              ]
+            },
+            "description": "Groups have no owner - any signed-in user may edit one.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Delete group",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/:groupId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "groups",
+                ":groupId"
+              ],
+              "variable": [
+                {
+                  "key": "groupId",
+                  "value": "1",
+                  "description": "any group id"
+                }
+              ]
+            },
+            "description": "Any signed-in user.\n\nRequires `Authorization: Bearer <token>`. Expected: 204."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get user",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:userId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ":userId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "2",
+                  "description": "any user id"
+                }
+              ]
+            },
+            "description": "A public profile. The password hash is never part of the shape.\n\nCallable without a token. Expected: 200."
+          }
+        },
+        {
+          "name": "Suggested users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/getSuggested",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "getSuggested"
+              ]
+            },
+            "description": "Everyone except the caller, in a trimmed shape whose avatar field is called photo rather than profileImage.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Update my profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Helena\",\n  \"secondName\": \"Hills\",\n  \"description\": \"Updated from Postman.\",\n  \"profileImage\": \"/assets/user-helena.png\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profile"
+              ]
+            },
+            "description": "Profile fields only. Email and password move through PUT /api/account, which asks for the current password.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Me",
+      "item": [
+        {
+          "name": "My profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "me"
+              ]
+            },
+            "description": "The user the access token belongs to.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "My posts (paged)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/me/posts?limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "1-100, default 20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "rows to skip, default 0"
+                }
+              ]
+            },
+            "description": "Same page shape as GET /api/posts.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "My comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/me/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "comments"
+              ]
+            },
+            "description": "Unpaged.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "My comment count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/me/comments/count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "comments",
+                "count"
+              ]
+            },
+            "description": "{ count }.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "My likes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/me/likes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "likes"
+              ]
+            },
+            "description": "Like rows, not posts.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "My like count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/me/likes/count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "likes",
+                "count"
+              ]
+            },
+            "description": "{ count }.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Utility",
+      "item": [
+        {
+          "name": "Upload image (stub)",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/upload-image",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "upload-image"
+              ]
+            },
+            "description": "Stores nothing and returns a made-up URL, so an upload flow has something to render. Attach any file to the form-data body.\n\nCallable without a token. Expected: 201."
+          }
+        },
+        {
+          "name": "Reset database",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/__reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "__reset"
+              ]
+            },
+            "description": "Drops everything and reseeds - including sessions, so every token stops working and accounts made with signup are gone.\n\nCallable without a token. Expected: 200."
+          }
+        },
+        {
+          "name": "This collection",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/postman",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "postman"
+              ]
+            },
+            "description": "The collection you are reading, regenerated by the running server. Re-import it after upgrading the package to pick up new endpoints; baseUrl comes back pointing at whichever host served it.\n\nCallable without a token. Expected: 200."
+          }
+        }
+      ]
+    },
+    {
+      "name": "GraphQL — queries",
+      "description": "Every `Query` field in the schema, one request each.",
+      "item": [
+        {
+          "name": "Me",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Me {\n  me {\n    id\n    username\n    email\n    firstName\n    secondName\n    description\n    profileImage\n    creationDate\n    modifiedDate\n  }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "SuggestedUsers",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query SuggestedUsers {\n  suggestedUsers {\n    id\n    username\n    description\n    photo\n  }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "AllGroups",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query AllGroups {\n  allGroups {\n    id\n    title\n    photo\n    membersCount\n  }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Group($id: Int!) {\n  group(id: $id) {\n    id\n    title\n    photo\n    membersCount\n  }\n}",
+                "variables": "{\n  \"id\": 1\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "AllPosts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query AllPosts($limit: Int, $offset: Int) {\n  allPosts(limit: $limit, offset: $offset) {\n    id\n    authorId\n    author {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n    title\n    content\n    image\n    creationDate\n    modifiedDate\n    likesCount\n    commentsCount\n    likedByUsers {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n  }\n}",
+                "variables": "{\n  \"limit\": 20,\n  \"offset\": 0\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "PostsTotal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query PostsTotal {\n  postsTotal\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Post($id: Int!) {\n  post(id: $id) {\n    id\n    authorId\n    author {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n    title\n    content\n    image\n    creationDate\n    modifiedDate\n    likesCount\n    commentsCount\n    likedByUsers {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n  }\n}",
+                "variables": "{\n  \"id\": 101\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "PostComments",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query PostComments($postId: Int!) {\n  postComments(postId: $postId) {\n    id\n    postId\n    authorId\n    text\n    creationDate\n    modifiedDate\n  }\n}",
+                "variables": "{\n  \"postId\": 101\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "AllComments",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query AllComments {\n  allComments {\n    id\n    postId\n    authorId\n    text\n    creationDate\n    modifiedDate\n  }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "MePosts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query MePosts($limit: Int, $offset: Int) {\n  mePosts(limit: $limit, offset: $offset) {\n    id\n    authorId\n    author {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n    title\n    content\n    image\n    creationDate\n    modifiedDate\n    likesCount\n    commentsCount\n    likedByUsers {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n  }\n}",
+                "variables": "{\n  \"limit\": 20,\n  \"offset\": 0\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "MeComments",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query MeComments {\n  meComments {\n    id\n    postId\n    authorId\n    text\n    creationDate\n    modifiedDate\n  }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "MeCommentsCount",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query MeCommentsCount {\n  meCommentsCount\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "MeLikes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query MeLikes {\n  meLikes {\n    id\n    userId\n    postId\n    creationDate\n  }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "MeLikesCount",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query MeLikesCount {\n  meLikesCount\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        }
+      ]
+    },
+    {
+      "name": "GraphQL — mutations",
+      "description": "Every `Mutation` field in the schema, one request each.",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation Login($email: String!, $password: String!) {\n  login(email: $email, password: $password) {\n    token\n    refreshToken\n    expiresIn\n    user {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n  }\n}",
+                "variables": "{\n  \"email\": \"helena.hills@social.com\",\n  \"password\": \"password789\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "Refresh",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation Refresh($refreshToken: String!) {\n  refresh(refreshToken: $refreshToken) {\n    token\n    refreshToken\n    expiresIn\n  }\n}",
+                "variables": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation Signup($email: String!, $password: String!) {\n  signup(email: $email, password: $password) {\n    message\n    user {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n  }\n}",
+                "variables": "{\n  \"email\": \"trainee@example.com\",\n  \"password\": \"password789\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "UpdateAccount",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateAccount($input: UpdateAccountInput!) {\n  updateAccount(input: $input) {\n    message\n    user {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n    token\n    refreshToken\n    expiresIn\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"currentPassword\": \"password789\",\n    \"email\": \"helena.hills@social.com\",\n    \"password\": \"password789\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation Logout($refreshToken: String) {\n  logout(refreshToken: $refreshToken)\n}",
+                "variables": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "UpdateProfile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateProfile($input: UpdateProfileInput!) {\n  updateProfile(input: $input) {\n    id\n    username\n    email\n    firstName\n    secondName\n    description\n    profileImage\n    creationDate\n    modifiedDate\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"username\": \"sample username\",\n    \"email\": \"helena.hills@social.com\",\n    \"firstName\": \"sample firstName\",\n    \"secondName\": \"sample secondName\",\n    \"description\": \"sample description\",\n    \"profileImage\": \"sample profileImage\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "CreatePost",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreatePost($input: CreatePostInput!) {\n  createPost(input: $input) {\n    id\n    authorId\n    author {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n    title\n    content\n    image\n    creationDate\n    modifiedDate\n    likesCount\n    commentsCount\n    likedByUsers {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"title\": \"Hello from Postman\",\n    \"content\": \"Created against the internship backend.\",\n    \"image\": \"sample image\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "UpdatePost",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdatePost($id: Int!, $input: CreatePostInput!) {\n  updatePost(id: $id, input: $input) {\n    id\n    authorId\n    author {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n    title\n    content\n    image\n    creationDate\n    modifiedDate\n    likesCount\n    commentsCount\n    likedByUsers {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n  }\n}",
+                "variables": "{\n  \"id\": 101,\n  \"input\": {\n    \"title\": \"Hello from Postman\",\n    \"content\": \"Created against the internship backend.\",\n    \"image\": \"sample image\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "DeletePost",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation DeletePost($id: Int!) {\n  deletePost(id: $id)\n}",
+                "variables": "{\n  \"id\": 101\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "LikePost",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation LikePost($postId: Int!) {\n  likePost(postId: $postId) {\n    id\n    authorId\n    author {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n    title\n    content\n    image\n    creationDate\n    modifiedDate\n    likesCount\n    commentsCount\n    likedByUsers {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n  }\n}",
+                "variables": "{\n  \"postId\": 101\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "DislikePost",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation DislikePost($postId: Int!) {\n  dislikePost(postId: $postId) {\n    id\n    authorId\n    author {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n    title\n    content\n    image\n    creationDate\n    modifiedDate\n    likesCount\n    commentsCount\n    likedByUsers {\n      id\n      username\n      email\n      firstName\n      secondName\n      description\n      profileImage\n      creationDate\n      modifiedDate\n    }\n  }\n}",
+                "variables": "{\n  \"postId\": 101\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "CreateComment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateComment($postId: Int!, $text: String!) {\n  createComment(postId: $postId, text: $text) {\n    id\n    postId\n    authorId\n    text\n    creationDate\n    modifiedDate\n  }\n}",
+                "variables": "{\n  \"postId\": 101,\n  \"text\": \"Written from Postman.\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "UpdateComment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateComment($id: Int!, $text: String!) {\n  updateComment(id: $id, text: $text) {\n    id\n    postId\n    authorId\n    text\n    creationDate\n    modifiedDate\n  }\n}",
+                "variables": "{\n  \"id\": 3,\n  \"text\": \"Written from Postman.\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "DeleteComment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation DeleteComment($id: Int!) {\n  deleteComment(id: $id)\n}",
+                "variables": "{\n  \"id\": 3\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "CreateGroup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateGroup($input: CreateGroupInput!) {\n  createGroup(input: $input) {\n    id\n    title\n    photo\n    membersCount\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"title\": \"Hello from Postman\",\n    \"photo\": \"sample photo\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "UpdateGroup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateGroup($id: Int!, $input: CreateGroupInput!) {\n  updateGroup(id: $id, input: $input) {\n    id\n    title\n    photo\n    membersCount\n  }\n}",
+                "variables": "{\n  \"id\": 1,\n  \"input\": {\n    \"title\": \"Hello from Postman\",\n    \"photo\": \"sample photo\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "DeleteGroup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation DeleteGroup($id: Int!) {\n  deleteGroup(id: $id)\n}",
+                "variables": "{\n  \"id\": 1\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        }
+      ]
+    }
+  ]
+}

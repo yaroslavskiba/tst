@@ -1,0 +1,1218 @@
+{
+  "info": {
+    "_postman_id": "0fa3cc66-808d-4017-ae5f-5f7c1b51e25d",
+    "name": "Internship Backend — notes",
+    "description": "A Google-Keep-style notes/todos API with checklists, over REST and GraphQL.\n\nSend **Auth > Login** first: its test script stores `token` and `refreshToken` as collection variables and every other request picks them up automatically.\n\nTodos belong to their owner, so every list here is the seeded login’s own - 8 NOTES, 2 ARCHIVED, 4 TRASH out of the 60 rows in the database.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string",
+      "description": "Where the backend is listening. Point it somewhere else to run the same requests against another instance."
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "Access token. Filled in by Auth > Login."
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string",
+      "description": "Refresh token. Filled in by Auth > Login."
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 and a token pair', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('token');",
+                  "  pm.collectionVariables.set('token', body.token);",
+                  "  pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"helena.hills@social.com\",\n  \"password\": \"password789\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            },
+            "description": "Exchanges credentials for an access/refresh pair. The test script stores both in collection variables, so every other request below is authenticated - run this first.\n\nCallable without a token. Expected: 200."
+          }
+        },
+        {
+          "name": "Refresh tokens",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 and a token pair', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('token');",
+                  "  pm.collectionVariables.set('token', body.token);",
+                  "  pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "refresh"
+              ]
+            },
+            "description": "Trades the refresh token for a new pair, consuming the old one. Rotation is enforced: replaying a spent token revokes the whole session family.\n\nCallable without a token. Expected: 200."
+          }
+        },
+        {
+          "name": "Sign up",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"trainee@example.com\",\n  \"password\": \"password789\",\n  \"username\": \"trainee\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "signup"
+              ]
+            },
+            "description": "Creates an account that can log in immediately - and starts with no todos at all, since todos belong to their owner.\n\nCallable without a token. Expected: 201."
+          }
+        },
+        {
+          "name": "Change email or password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"password789\",\n  \"email\": \"helena.hills@social.com\",\n  \"password\": \"password789\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "account"
+              ]
+            },
+            "description": "currentPassword is always required. Changing the password revokes every other session and returns a fresh token pair; changing only the email returns none.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "logout"
+              ]
+            },
+            "description": "Revokes the refresh token in the database and blacklists the access token in memory. Unguarded on purpose: it must work with an expired token.\n\nCallable without a token. Expected: 200."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Todos",
+      "item": [
+        {
+          "name": "List todos (paged)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/todos?status=NOTES&limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "todos"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "NOTES",
+                  "description": "NOTES | ARCHIVED | TRASH - default NOTES"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "1-100, default 20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "rows to skip, default 0"
+                }
+              ]
+            },
+            "description": "A page of the caller’s own todos: { items, total, limit, offset }. Without status it returns NOTES; the filter and the page combine.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Create todo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Written from Postman\",\n  \"content\": \"Optional body text.\",\n  \"items\": [\n    {\n      \"text\": \"First step\"\n    },\n    {\n      \"text\": \"Second step\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/todos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "todos"
+              ]
+            },
+            "description": "items is optional; each entry needs only text, and ids are assigned per todo starting at 1.\n\nRequires `Authorization: Bearer <token>`. Expected: 201."
+          }
+        },
+        {
+          "name": "Update todo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Edited title\",\n  \"content\": \"Edited content\",\n  \"items\": [\n    {\n      \"id\": 1,\n      \"text\": \"Replaced step\",\n      \"isCompleted\": true\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/todos/:todoId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "todos",
+                ":todoId"
+              ],
+              "variable": [
+                {
+                  "key": "todoId",
+                  "value": "1",
+                  "description": "a todo owned by the seeded login"
+                }
+              ]
+            },
+            "description": "Sending items replaces the whole checklist - it is not a merge. Leave it out to edit only the text.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Change status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newStatus\": \"ARCHIVED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/todos/:todoId/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "todos",
+                ":todoId",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "todoId",
+                  "value": "1",
+                  "description": "a todo owned by the seeded login"
+                }
+              ]
+            },
+            "description": "Moves a note between NOTES, ARCHIVED and TRASH. Anything else is a 400 - the column has a CHECK constraint behind it.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Delete todo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/todos/:todoId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "todos",
+                ":todoId"
+              ],
+              "variable": [
+                {
+                  "key": "todoId",
+                  "value": "1",
+                  "description": "a todo owned by the seeded login"
+                }
+              ]
+            },
+            "description": "Permanent, whatever the status. Owner only.\n\nRequires `Authorization: Bearer <token>`. Expected: 204."
+          }
+        },
+        {
+          "name": "Empty trash",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/todos/deleteAll",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "todos",
+                "deleteAll"
+              ]
+            },
+            "description": "Permanently deletes every TRASH todo of the caller. 404 when the trash is already empty.\n\nRequires `Authorization: Bearer <token>`. Expected: 204."
+          }
+        },
+        {
+          "name": "Unarchive all",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/todos/unarchiveAll",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "todos",
+                "unarchiveAll"
+              ]
+            },
+            "description": "Moves every ARCHIVED todo back to NOTES and returns the restored rows. 404 when there were none.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checklist",
+      "item": [
+        {
+          "name": "Toggle item",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/todos/:todoId/item/:itemId/toggle",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "todos",
+                ":todoId",
+                "item",
+                ":itemId",
+                "toggle"
+              ],
+              "variable": [
+                {
+                  "key": "todoId",
+                  "value": "1",
+                  "description": "a todo with a checklist"
+                },
+                {
+                  "key": "itemId",
+                  "value": "1",
+                  "description": "an item id inside that todo"
+                }
+              ]
+            },
+            "description": "Flips one item and returns the whole todo. itemId is the id inside that todo, not a global one.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Uncheck all items",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/todos/:todoId/uncheckAll",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "todos",
+                ":todoId",
+                "uncheckAll"
+              ],
+              "variable": [
+                {
+                  "key": "todoId",
+                  "value": "1",
+                  "description": "a todo with a checklist"
+                }
+              ]
+            },
+            "description": "400 when the todo has no checklist at all.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Set background on every todo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"backgroundImage\": \"/assets/bg-1.png\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/background",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "background"
+              ]
+            },
+            "description": "Applies one background to all of the caller’s todos and returns them. Per-todo backgrounds are GraphQL-only (updateTodoBackground).\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "My profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "me"
+              ]
+            },
+            "description": "The user the access token belongs to.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        },
+        {
+          "name": "Update my profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"helenahills\",\n  \"firstName\": \"Helena\",\n  \"secondName\": \"Hills\",\n  \"description\": \"Updated from Postman.\",\n  \"profileImage\": \"/assets/profiles/user-helena.png\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "me"
+              ]
+            },
+            "description": "Profile fields only. Email and password move through PUT /api/account, which asks for the current password.\n\nRequires `Authorization: Bearer <token>`. Expected: 200."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Utility",
+      "item": [
+        {
+          "name": "Upload image (stub)",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/upload-image",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "upload-image"
+              ]
+            },
+            "description": "Stores nothing and returns a made-up URL, so an upload flow has something to render. Attach any file to the form-data body.\n\nCallable without a token. Expected: 201."
+          }
+        },
+        {
+          "name": "Reset database",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/__reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "__reset"
+              ]
+            },
+            "description": "Drops everything and reseeds - including sessions, so every token stops working and accounts made with signup are gone.\n\nCallable without a token. Expected: 200."
+          }
+        },
+        {
+          "name": "This collection",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/postman",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "postman"
+              ]
+            },
+            "description": "The collection you are reading, regenerated by the running server. Re-import it after upgrading the package to pick up new endpoints; baseUrl comes back pointing at whichever host served it.\n\nCallable without a token. Expected: 200."
+          }
+        }
+      ]
+    },
+    {
+      "name": "GraphQL — queries",
+      "description": "Every `Query` field in the schema, one request each.",
+      "item": [
+        {
+          "name": "Me",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Me {\n  me {\n    id\n    username\n    email\n    profileImage\n    firstName\n    secondName\n    description\n    lastLogin\n    creationDate\n    modifiedDate\n  }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "Todos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Todos($status: NoteStatus, $limit: Int, $offset: Int) {\n  todos(status: $status, limit: $limit, offset: $offset) {\n    id\n    title\n    content\n    items {\n      id\n      text\n      isCompleted\n    }\n    backgroundImage\n    status\n    createdAt\n    updatedAt\n    userId\n  }\n}",
+                "variables": "{\n  \"status\": \"NOTES\",\n  \"limit\": 20,\n  \"offset\": 0\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "TodosTotal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query TodosTotal($status: NoteStatus) {\n  todosTotal(status: $status)\n}",
+                "variables": "{\n  \"status\": \"NOTES\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        }
+      ]
+    },
+    {
+      "name": "GraphQL — mutations",
+      "description": "Every `Mutation` field in the schema, one request each.",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation Login($email: String!, $password: String!) {\n  login(email: $email, password: $password) {\n    token\n    refreshToken\n    expiresIn\n    user {\n      id\n      username\n      email\n      profileImage\n      firstName\n      secondName\n      description\n      lastLogin\n      creationDate\n      modifiedDate\n    }\n  }\n}",
+                "variables": "{\n  \"email\": \"helena.hills@social.com\",\n  \"password\": \"password789\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "Refresh",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation Refresh($refreshToken: String!) {\n  refresh(refreshToken: $refreshToken) {\n    token\n    refreshToken\n    expiresIn\n  }\n}",
+                "variables": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation Signup($email: String!, $password: String!) {\n  signup(email: $email, password: $password) {\n    message\n    user {\n      id\n      username\n      email\n      profileImage\n      firstName\n      secondName\n      description\n      lastLogin\n      creationDate\n      modifiedDate\n    }\n  }\n}",
+                "variables": "{\n  \"email\": \"trainee@example.com\",\n  \"password\": \"password789\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "UpdateAccount",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateAccount($input: UpdateAccountInput!) {\n  updateAccount(input: $input) {\n    message\n    user {\n      id\n      username\n      email\n      profileImage\n      firstName\n      secondName\n      description\n      lastLogin\n      creationDate\n      modifiedDate\n    }\n    token\n    refreshToken\n    expiresIn\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"currentPassword\": \"password789\",\n    \"email\": \"helena.hills@social.com\",\n    \"password\": \"password789\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation Logout($refreshToken: String) {\n  logout(refreshToken: $refreshToken) {\n    message\n  }\n}",
+                "variables": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "UpdateProfile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateProfile($input: UpdateProfileInput!) {\n  updateProfile(input: $input) {\n    id\n    username\n    email\n    profileImage\n    firstName\n    secondName\n    description\n    lastLogin\n    creationDate\n    modifiedDate\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"username\": \"sample username\",\n    \"email\": \"helena.hills@social.com\",\n    \"profileImage\": \"sample profileImage\",\n    \"firstName\": \"sample firstName\",\n    \"secondName\": \"sample secondName\",\n    \"description\": \"sample description\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "CreateTodo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateTodo($input: CreateTodoInput!) {\n  createTodo(input: $input) {\n    id\n    title\n    content\n    items {\n      id\n      text\n      isCompleted\n    }\n    backgroundImage\n    status\n    createdAt\n    updatedAt\n    userId\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"title\": \"Written from Postman\",\n    \"content\": \"Optional body text.\",\n    \"items\": {\n      \"text\": \"Written from Postman.\"\n    }\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "UpdateTodo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateTodo($id: Int!, $input: UpdateTodoInput!) {\n  updateTodo(id: $id, input: $input) {\n    id\n    title\n    content\n    items {\n      id\n      text\n      isCompleted\n    }\n    backgroundImage\n    status\n    createdAt\n    updatedAt\n    userId\n  }\n}",
+                "variables": "{\n  \"id\": 1,\n  \"input\": {\n    \"title\": \"Written from Postman\",\n    \"content\": \"Optional body text.\",\n    \"items\": {\n      \"id\": 1,\n      \"text\": \"Written from Postman.\",\n      \"isCompleted\": true\n    }\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "ChangeTodoStatus",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation ChangeTodoStatus($id: Int!, $newStatus: NoteStatus!) {\n  changeTodoStatus(id: $id, newStatus: $newStatus) {\n    id\n    title\n    content\n    items {\n      id\n      text\n      isCompleted\n    }\n    backgroundImage\n    status\n    createdAt\n    updatedAt\n    userId\n  }\n}",
+                "variables": "{\n  \"id\": 1,\n  \"newStatus\": \"ARCHIVED\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "DeleteTodo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation DeleteTodo($id: Int!) {\n  deleteTodo(id: $id) {\n    id\n    success\n  }\n}",
+                "variables": "{\n  \"id\": 1\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "ToggleChecklistItem",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation ToggleChecklistItem($todoId: Int!, $itemId: Int!) {\n  toggleChecklistItem(todoId: $todoId, itemId: $itemId) {\n    id\n    title\n    content\n    items {\n      id\n      text\n      isCompleted\n    }\n    backgroundImage\n    status\n    createdAt\n    updatedAt\n    userId\n  }\n}",
+                "variables": "{\n  \"todoId\": 1,\n  \"itemId\": 1\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "UpdateChecklistItemText",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateChecklistItemText($todoId: Int!, $itemId: Int!, $text: String!) {\n  updateChecklistItemText(todoId: $todoId, itemId: $itemId, text: $text) {\n    id\n    title\n    content\n    items {\n      id\n      text\n      isCompleted\n    }\n    backgroundImage\n    status\n    createdAt\n    updatedAt\n    userId\n  }\n}",
+                "variables": "{\n  \"todoId\": 1,\n  \"itemId\": 1,\n  \"text\": \"Written from Postman.\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "UncheckAllItems",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UncheckAllItems($id: Int!) {\n  uncheckAllItems(id: $id) {\n    id\n    title\n    content\n    items {\n      id\n      text\n      isCompleted\n    }\n    backgroundImage\n    status\n    createdAt\n    updatedAt\n    userId\n  }\n}",
+                "variables": "{\n  \"id\": 1\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        },
+        {
+          "name": "UpdateTodoBackground",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateTodoBackground($id: Int!, $backgroundImage: String!) {\n  updateTodoBackground(id: $id, backgroundImage: $backgroundImage) {\n    id\n    title\n    content\n    items {\n      id\n      text\n      isCompleted\n    }\n    backgroundImage\n    status\n    createdAt\n    updatedAt\n    userId\n  }\n}",
+                "variables": "{\n  \"id\": 1,\n  \"backgroundImage\": \"/assets/bg-1.png\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "graphql"
+              ]
+            },
+            "description": "Generated from the GraphQL schema: every field of the return type is selected, so trim what you do not need.\n\nEach resolver checks the token itself, so this endpoint is never rejected up front - an operation that needs auth answers with a GraphQL error rather than a bare 401 on the path."
+          }
+        }
+      ]
+    }
+  ]
+}
